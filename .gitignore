@@ -1,0 +1,9 @@
+*.pyc
+*~
+.*~
+*.egg-info
+.coverage
+\#*
+.\#*
+tmp
+doc/
