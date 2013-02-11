@@ -1,0 +1,59 @@
+---
+versions: ["1.0.4b"]
+#The above line is automatically updated by running 'make release', it MUST remain on line 2 of this file.
+---
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Python-pyhsm: python-pyhsm releases" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Python-pyhsm releases</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yubico/python-pyhsm">View on GitHub</a>
+
+          <h1 id="project_title">Python-pyhsm</h1>
+          <h2 id="project_tagline">Python code for YubiHSM</h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>Releases</h1>
+        <dl>
+          {% for version in page.versions reversed %}
+          <dt>python-pyhsm {{ version }}</dt>
+            <dd><a href="releases/python-pyhsm-{{ version }}.tar.gz">python-pyhsm-{{ version }}.tar.gz</a></dd>
+            <dd><a href="releases/python-pyhsm-{{ version }}.tar.gz.sig">python-pyhsm-{{ version }}.tar.gz.sig</a></dd>
+          {% endfor %}
+            <dt>pyhsm 1.0.2</dt>
+            <dd><a href="releases/pyhsm-1.0.2.tar.gz">pyhsm-1.0.2.tar.gz</a></dd>
+            <dd><a href="releases/pyhsm-1.0.2.tar.gz.sig">pyhsm-1.0.2.tar.gz.sig</a></dd>
+        </dl>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Python-pyhsm maintained by <a href="https://github.com/Yubico">Yubico</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
