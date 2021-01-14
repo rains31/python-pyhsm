@@ -38,6 +38,9 @@ __all__ = [
 ]
 
 #from pyhsm  import __version__
+from binascii import unhexlify
+from typing import Optional
+
 import pyhsm.cmd
 import pyhsm.stick
 import pyhsm.stick_client
@@ -54,7 +57,7 @@ import pyhsm.hmac_cmd
 import pyhsm.validate_cmd
 
 import pyhsm.yubikey
-import pyhsm.soft_hsm
+#import pyhsm.soft_hsm
 
 class YHSM():
     """
@@ -79,7 +82,6 @@ class YHSM():
         # Check that communication isn't mangled (by something like 'stty onlcr')
         if test_comm:
             self.test_comm()
-        return None
 
     def __repr__(self):
         return '<%s instance at %s: %s>' % (
@@ -127,44 +129,43 @@ class YHSM():
         self.stick.set_debug(new)
         return old
 
-    def test_comm(self):
+    def test_comm(self) -> None:
         """
         Verify that data we send to and receive from the YubiHSM isn't mangled.
 
         In some scenarios, communications with the YubiHSM might be affected
         by terminal line settings turning CR into LF for example.
         """
-        data = ''.join([chr(x) for x in range(256)])
-        data = data + '0d0a0d0a'.decode('hex')
+        data = b''.join([bytes([x]) for x in range(256)])
+        data = data + unhexlify('0d0a0d0a')
         chunk_size = pyhsm.defines.YSM_MAX_PKT_SIZE - 10 # max size of echo
         count = 0
         while data:
             this = data[:chunk_size]
             data = data[chunk_size:]
             res = self.echo(this)
-            for i in xrange(len(this)):
+            for i in range(len(this)):
                 if res[i] != this[i]:
-                    msg = "Echo test failed at position %i (0x%x != 0x%x)" \
-                        % (count + i, ord(res[i]), ord(this[i]))
+                    msg = f"Echo test failed at position {count + i:d} ({res[i]} != {this[i]})"
                     raise pyhsm.exception.YHSM_Error(msg)
             count += len(this)
 
     #
     # Basic commands
     #
-    def echo(self, data):
+    def echo(self, data: bytes) -> bytes:
         """
         Echo test.
 
-        @type data: string
+        @type data: bytes
         @return: data read from YubiHSM -- should equal `data'
-        @rtype: string
+        @rtype: bytes
 
         @see: L{pyhsm.basic_cmd.YHSM_Cmd_Echo}
         """
         return pyhsm.basic_cmd.YHSM_Cmd_Echo(self.stick, data).execute()
 
-    def info(self):
+    def info(self) -> pyhsm.basic_cmd.YHSM_Cmd_System_Info:
         """ Get firmware version and unique ID from YubiHSM.
 
         @return: System information
@@ -174,7 +175,7 @@ class YHSM():
         """
         return pyhsm.basic_cmd.YHSM_Cmd_System_Info(self.stick).execute()
 
-    def random(self, num_bytes):
+    def random(self, num_bytes: int) -> bytes:
         """
         Get random bytes from YubiHSM.
 
@@ -237,7 +238,7 @@ class YHSM():
         """
         return pyhsm.basic_cmd.YHSM_Cmd_Temp_Key_Load(self.stick, nonce, key_handle, aead).execute()
 
-    def unlock(self, password = None, otp = None):
+    def unlock(self, password: Optional[bytes] = None, otp: Optional[str] = None) -> bool:
         """
         Unlock the YubiHSM using the master key and/or a YubiKey OTP.
 
@@ -276,8 +277,8 @@ class YHSM():
             res = True
         if res and otp is not None:
             (public_id, otp,) = pyhsm.yubikey.split_id_otp(otp)
-            public_id = pyhsm.yubikey.modhex_decode(public_id).decode('hex')
-            otp = pyhsm.yubikey.modhex_decode(otp).decode('hex')
+            public_id = unhexlify(pyhsm.yubikey.modhex_decode(public_id))
+            otp = unhexlify(pyhsm.yubikey.modhex_decode(otp))
             return pyhsm.basic_cmd.YHSM_Cmd_HSM_Unlock(self.stick, public_id, otp).execute()
         return res
 
@@ -565,7 +566,7 @@ class YHSM():
     #
     # HMAC commands
     #
-    def hmac_sha1(self, key_handle, data, flags = None, final = True, to_buffer = False):
+    def hmac_sha1(self, key_handle: int, data: bytes, flags = None, final = True, to_buffer = False):
         """
         Have the YubiHSM generate a HMAC SHA1 of 'data' using a key handle.
 
@@ -581,7 +582,7 @@ class YHSM():
         @keyword final: True when there is no more data, False if there is more
         @keyword to_buffer: Should the final result be stored in the YubiHSM internal buffer or not
         @type key_handle: integer or string
-        @type data: string
+        @type data: bytes
         @type flags: None or integer
 
         @returns: HMAC-SHA1 instance

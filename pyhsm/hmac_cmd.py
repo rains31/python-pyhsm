@@ -15,9 +15,13 @@ __all__ = [
     'YHSM_GeneratedHMACSHA1',
 ]
 
+from typing import Union
+
 import pyhsm.exception
 import pyhsm.defines
 from pyhsm.cmd import YHSM_Cmd
+from pyhsm.stick import YHSM_Stick
+
 
 class YHSM_Cmd_HMAC_SHA1_Write(YHSM_Cmd):
     """
@@ -32,8 +36,8 @@ class YHSM_Cmd_HMAC_SHA1_Write(YHSM_Cmd):
     status = None
     result = None
 
-    def __init__(self, stick, key_handle, data, flags = None, final = True, to_buffer = False):
-        data = pyhsm.util.input_validate_str(data, 'data', max_len = pyhsm.defines.YSM_MAX_PKT_SIZE - 6)
+    def __init__(self, stick: YHSM_Stick, key_handle: Union[int, str], data: bytes, flags = None, final = True, to_buffer = False):
+        data = pyhsm.util.input_validate_bytes(data, 'data', max_len = pyhsm.defines.YSM_MAX_PKT_SIZE - 6)
         self.key_handle = pyhsm.util.input_validate_key_handle(key_handle)
 
         if flags != None:

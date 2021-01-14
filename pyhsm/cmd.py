@@ -18,6 +18,8 @@ __all__ = [
 
 import pyhsm.exception
 import pyhsm.defines
+from pyhsm.stick import YHSM_Stick
+
 
 class YHSM_Cmd():
     """
@@ -27,7 +29,7 @@ class YHSM_Cmd():
     response_status = None
     executed = False
 
-    def __init__(self, stick, command, payload=''):
+    def __init__(self, stick: YHSM_Stick, command: int, payload: bytes=b''):
         """
         The base class for all YSM_ commands.
 
@@ -37,12 +39,11 @@ class YHSM_Cmd():
 
         @type stick: L{pyhsm.stick.YHSM_Stick}
         @type command: integer
-        @type payload: string
+        @type payload: bytes
         """
         self.stick = stick
         self.command = command
-        self.payload = payload
-        return None
+        self.payload: bytes = payload
 
     def execute(self, read_response=True):
         """
@@ -61,7 +62,7 @@ class YHSM_Cmd():
             # YSM_NULL is the exception to the rule - it should NOT be prefixed with YSM_PKT.bcnt
             cmd_buf = struct.pack('BB', len(self.payload) + 1, self.command)
         else:
-            cmd_buf = chr(self.command)
+            cmd_buf = bytes([self.command])
         cmd_buf += self.payload
         debug_info = None
         unlock = self.stick.acquire()
@@ -150,8 +151,8 @@ def reset(stick):
     """
     Send a bunch of zero-bytes to the YubiHSM, and flush the input buffer.
     """
-    nulls = (pyhsm.defines.YSM_MAX_PKT_SIZE - 1) * '\x00'
-    res = YHSM_Cmd(stick, pyhsm.defines.YSM_NULL, payload = nulls).execute(read_response = False)
+    nulls = bytes(pyhsm.defines.YSM_MAX_PKT_SIZE - 1)
+    res = YHSM_Cmd(stick, pyhsm.defines.YSM_NULL, payload=nulls).execute(read_response = False)
     unlock = stick.acquire()
     try:
         stick.drain()

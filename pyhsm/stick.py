@@ -52,7 +52,7 @@ class YHSM_Stick():
         """
         return self.acquire
 
-    def write(self, data, debug_info=None):
+    def write(self, data: bytes, debug_info=None):
         """
         Write data to YHSM device.
         """

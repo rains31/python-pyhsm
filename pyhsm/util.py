@@ -16,6 +16,8 @@ __all__ = [
     # classes
 ]
 
+from typing import Union
+
 import pyhsm.exception
 
 def hexdump(src, length=8):
@@ -35,7 +37,7 @@ def group(data, num):
     """ Split data into chunks of num chars each """
     return [data[i:i+num] for i in xrange(0, len(data), num)]
 
-def key_handle_to_int(this):
+def key_handle_to_int(this: Union[int, str]) -> int:
     """
     Turn "123" into 123 and "KSM1" into 827151179
     (0x314d534b, 'K' = 0x4b, S = '0x53', M = 0x4d).
@@ -53,6 +55,16 @@ def key_handle_to_int(this):
             num = struct.unpack('<I', this)[0]
             return num
     raise pyhsm.exception.YHSM_Error("Could not parse key_handle '%s'" % (this))
+
+def input_validate_bytes(_bytes, name, max_len=None, exact_len=None):
+    """ Input validation for bytes. """
+    if type(_bytes) is not bytes:
+        raise pyhsm.exception.YHSM_WrongInputType(name, str, type(_bytes))
+    if max_len != None and len(_bytes) > max_len:
+        raise pyhsm.exception.YHSM_InputTooLong(name, max_len, len(_bytes))
+    if exact_len != None and len(_bytes) != exact_len:
+        raise pyhsm.exception.YHSM_WrongInputSize(name, exact_len, len(_bytes))
+    return _bytes
 
 def input_validate_str(string, name, max_len=None, exact_len=None):
     """ Input validation for strings. """
@@ -85,7 +97,7 @@ def input_validate_nonce(nonce, name='nonce', pad = False):
     else:
         return nonce
 
-def input_validate_key_handle(key_handle, name='key_handle'):
+def input_validate_key_handle(key_handle: Union[int, str], name='key_handle') -> int:
     """ Input validation for key_handles. """
     if type(key_handle) is not int:
         try:

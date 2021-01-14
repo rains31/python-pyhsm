@@ -23,22 +23,26 @@ __all__ = [
     'YHSM_NonceResponse',
 ]
 
+from binascii import hexlify
+
 import pyhsm.defines
 import pyhsm.exception
 import pyhsm.aead_cmd
 from pyhsm.cmd import YHSM_Cmd
+from pyhsm.stick import YHSM_Stick
+
 
 class YHSM_Cmd_Echo(YHSM_Cmd):
     """
     Send something to the stick, and expect to get it echoed back.
     """
-    def __init__(self, stick, payload=''):
-        payload = pyhsm.util.input_validate_str(payload, 'payload', max_len = pyhsm.defines.YSM_MAX_PKT_SIZE - 1)
+    def __init__(self, stick, payload=b''):
+        payload = pyhsm.util.input_validate_bytes(payload, 'payload', max_len = pyhsm.defines.YSM_MAX_PKT_SIZE - 1)
         # typedef struct {
         #   uint8_t numBytes;                   // Number of bytes in data field
         #   uint8_t data[YSM_MAX_PKT_SIZE - 1]; // Data
         # } YSM_ECHO_REQ;
-        packed = chr(len(payload)) + payload
+        packed = bytes([len(payload)]) + payload
         YHSM_Cmd.__init__(self, stick, pyhsm.defines.YSM_ECHO, packed)
 
     def parse_result(self, data):
@@ -77,7 +81,7 @@ class YHSM_Cmd_System_Info(YHSM_Cmd):
                 hex(id(self)),
                 (self.version_major, self.version_minor, self.version_build),
                 self.protocol_ver,
-                self.system_uid.encode('hex')
+                hexlify(self.system_uid)
                 )
         else:
             return '<%s instance at %s (not executed)>' % (
@@ -111,15 +115,15 @@ class YHSM_Cmd_Random(YHSM_Cmd):
         # typedef struct {
         #   uint8_t numBytes;                   // Number of bytes to generate
         # } YSM_RANDOM_GENERATE_REQ;
-        packed = chr(self.num_bytes)
+        packed = bytes([self.num_bytes])
         YHSM_Cmd.__init__(self, stick, pyhsm.defines.YSM_RANDOM_GENERATE, packed)
 
-    def parse_result(self, data):
+    def parse_result(self, data: bytes) -> bytes:
         # typedef struct {
         #   uint8_t numBytes;                   // Number of bytes generated
         #   uint8_t rnd[YSM_MAX_PKT_SIZE - 1];  // Random data
         # } YHSM_RANDOM_GENERATE_RESP;
-        num_bytes = pyhsm.util.validate_cmd_response_int('num_bytes', ord(data[0]), self.num_bytes)
+        num_bytes = pyhsm.util.validate_cmd_response_int('num_bytes', data[0], self.num_bytes)
         return data[1:1 + num_bytes]
 
 
@@ -251,15 +255,15 @@ class YHSM_Cmd_Key_Storage_Unlock(YHSM_Cmd):
 
     status = None
 
-    def __init__(self, stick, password=''):
-        payload = pyhsm.util.input_validate_str(password, 'password', max_len = pyhsm.defines.YSM_BLOCK_SIZE)
+    def __init__(self, stick: YHSM_Stick, password: bytes=b''):
+        payload = pyhsm.util.input_validate_bytes(password, 'password', max_len = pyhsm.defines.YSM_BLOCK_SIZE)
         # typedef struct {
         #   uint8_t password[YSM_BLOCK_SIZE];  // Unlock password
         # } YSM_KEY_STORAGE_UNLOCK_REQ;
-        packed = payload.ljust(pyhsm.defines.YSM_BLOCK_SIZE, chr(0x0))
+        packed = payload.ljust(pyhsm.defines.YSM_BLOCK_SIZE, bytes([0x0]))
         YHSM_Cmd.__init__(self, stick, pyhsm.defines.YSM_KEY_STORAGE_UNLOCK, packed)
 
-    def parse_result(self, data):
+    def parse_result(self, data: bytes) -> bool:
         """
         Parse result of L{pyhsm.defines.YSM_KEY_STORAGE_UNLOCK} command.
 
@@ -292,15 +296,15 @@ class YHSM_Cmd_Key_Store_Decrypt(YHSM_Cmd):
 
     status = None
 
-    def __init__(self, stick, key=''):
-        payload = pyhsm.util.input_validate_str(key, 'key', max_len = pyhsm.defines.YSM_MAX_KEY_SIZE)
+    def __init__(self, stick: YHSM_Stick, key: bytes=b''):
+        payload = pyhsm.util.input_validate_bytes(key, 'key', max_len = pyhsm.defines.YSM_MAX_KEY_SIZE)
         # typedef struct {
         #   uint8_t key[YSM_MAX_KEY_SIZE];      // Key store decryption key
         # } YSM_KEY_STORE_DECRYPT_REQ;
-        packed = payload.ljust(pyhsm.defines.YSM_MAX_KEY_SIZE, chr(0x0))
+        packed = payload.ljust(pyhsm.defines.YSM_MAX_KEY_SIZE, bytes([0x0]))
         YHSM_Cmd.__init__(self, stick, pyhsm.defines.YSM_KEY_STORE_DECRYPT, packed)
 
-    def parse_result(self, data):
+    def parse_result(self, data: bytes) -> bool:
         """
         Parse result of L{pyhsm.defines.YSM_KEY_STORE_DECRYPT} command.
 
