@@ -71,7 +71,7 @@ setup(
     tests_require=[],
     install_requires=[
         'pyserial >= 2.3',
-        'pycrypto >= 2.1'
+        'pycryptodome >= 3.10.1',
     ],
     extras_require={
         'db': ['sqlalchemy'],
